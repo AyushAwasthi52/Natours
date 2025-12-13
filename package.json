@@ -9,7 +9,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "nodemon server.js",
-    "debug": "ndb server.js"
+    "debug": "ndb server.js",
+    "start:prod": "NODE_ENV=production nodemon server.js"
   },
   "dependencies": {
     "dotenv": "^17.2.3",

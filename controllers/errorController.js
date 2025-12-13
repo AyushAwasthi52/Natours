@@ -1,3 +1,10 @@
+const AppError = require('./../utils/appError')
+
+const handleCastError = err => {
+  const message = `Invalid ${err.path} : ${err.value}`
+  return new AppError(message, 404)
+}
+
 const sendErrorDev = (err, res) => {
   err.statusCode = err.statusCode || 500;
   err.status = err.status || "error";
@@ -29,8 +36,13 @@ const sendErrorProd = (err, res) => {
 
 module.exports = (err, req, res, next) => {
   if (process.env.NODE_ENV === "production") {
-    sendErrorProd(err, res);
-  } else {
+
+    let error = {...err};
+
+    if (error.name === 'CastError') error = handleCastError(error)
+
+    sendErrorProd(error, res);
+  } else if (process.env.NODE_ENV === 'development') {
     sendErrorDev(err, res);
   }
 };
