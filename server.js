@@ -4,17 +4,13 @@ const dotenv = require("dotenv");
 process.on("unhandledRejection", (err) => {
   console.log("Error Exiting Code!!!");
   console.log(err.name, err.message);
-  server.close(() => {
-    process.exit(1);
-  });
+  process.exit(1);
 });
 
 process.on("uncaughtException", (err) => {
   console.log("Error Exiting Code");
   console.log(err.name, err.message);
-  server.close(() => {
-    process.exit(1);
-  });
+  process.exit(1);
 });
 
 dotenv.config({ path: "./config.env" });
