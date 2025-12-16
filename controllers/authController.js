@@ -1,3 +1,4 @@
+const { promisify } = require("util");
 const jwt = require("jsonwebtoken");
 const User = require("./../models/userModel");
 const catchAsync = require("./../utils/catchAsync");
@@ -35,7 +36,7 @@ exports.login = catchAsync(async (req, res, next) => {
   const user = await User.findOne({ email }).select("+password");
 
   if (!user || !(await user.correctPassword(password, user.password))) {
-    return next(new AppError("Incorrect Email or Password", 404));
+    return next(new AppError("Incorrect Email or Password", 401));
   }
 
   const token = signToken(user._id);
@@ -59,5 +60,29 @@ exports.protect = catchAsync(async (req, res, next) => {
   if (!token)
     return next(new AppError("You are not logged in. Please log in first."));
 
+  const decoded = await promisify(jwt.verify)(token, process.env.JWT_KEY);
+
+  const freshUser = await User.findById(decoded.id);
+  if (!freshUser) return next(new AppError("The user no longer exists!", 401));
+
+  if (freshUser.changedPasswordAfter(decoded.iat))
+    return next(
+      new AppError("User recently changed password. Please log in again")
+    );
+
+  req.user = freshUser;
+
   next();
 });
+
+exports.restrictTo = (...roles) => {
+  return (req, res, next) => {
+    if (!roles.includes(req.user.role)) {
+      return next(
+        new AppError("You do not have permission to delte any tours")
+      );
+    }
+
+    next();
+  };
+};

@@ -1,9 +1,28 @@
-const AppError = require('./../utils/appError')
+const AppError = require("./../utils/appError");
 
-const handleCastError = err => {
-  const message = `Invalid ${err.path} : ${err.value}`
-  return new AppError(message, 404)
-}
+const handleCastErrorDB = (err) => {
+  const message = `Invalid ${err.path} : ${err.value}`;
+  return new AppError(message, 404);
+};
+
+const handleDuplicateFieldsDB = (err) => {
+  const field = Object.keys(err.keyValue)[0];
+  const value = err.keyValue[field];
+  const message = `Duplicate field value: ${value}. Please use another value!`;
+  return new AppError(message, 404);
+};
+
+const handleValidationErrorDBf = (err) => {
+  const errors = Object.values(err.errors).map((el) => el.message);
+  const message = `Invalid data input. ${errors.join(" ")}`;
+  return new AppError(message, 400);
+};
+
+const handleJWTError = () =>
+  new AppError("Invalid token please login again", 404);
+
+const handleTokenExpired = () =>
+  new AppError("Your token has expired please login again!");
 
 const sendErrorDev = (err, res) => {
   err.statusCode = err.statusCode || 500;
@@ -36,13 +55,17 @@ const sendErrorProd = (err, res) => {
 
 module.exports = (err, req, res, next) => {
   if (process.env.NODE_ENV === "production") {
+    let error = { ...err };
 
-    let error = {...err};
-
-    if (error.name === 'CastError') error = handleCastError(error)
+    if (error.name === "CastError") error = handleCastErrorDB(error);
+    if (error.code === 11000) error = handleDuplicateFieldsDB(error);
+    if (error.name === "ValidationError")
+      error = handleValidationErrorDBf(error);
+    if (error.name === "JsonWebTokenError") error = handleJWTError();
+    if (err.name === "TokenExpiredError") error = handleTokenExpired();
 
     sendErrorProd(error, res);
-  } else if (process.env.NODE_ENV === 'development') {
+  } else if (process.env.NODE_ENV === "development") {
     sendErrorDev(err, res);
   }
 };
