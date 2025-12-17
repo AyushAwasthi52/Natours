@@ -1,6 +1,10 @@
 const express = require("express");
 const morgan = require("morgan");
-const qs = require("qs");
+const rateLimit = require("express-rate-limit");
+const helmet = require("helmet");
+const mongoSanitizer = require("express-mongo-sanitize");
+const xss = require("xss-clean");
+const hpp = require("hpp");
 
 const AppError = require("./utils/appError");
 const GlobalErrorHandler = require("./controllers/errorController");
@@ -10,13 +14,38 @@ const userRouter = require("./routes/userRoutes");
 const app = express();
 
 // 1) MIDDLEWARES
+app.use(helmet());
+
+app.use(mongoSanitizer());
+app.use(xss());
+
+const limit = rateLimit({
+  max: 100,
+  window: 60 * 60 * 1000,
+  message: "Too many requests try again in an hour",
+});
+app.use("/api", limit);
+
 if (process.env.NODE_ENV === "development") {
   app.use(morgan("dev"));
 }
 
+app.use(
+  hpp({
+    whitelist: [
+      "duration",
+      "ratingQuantity",
+      "ratingAverage",
+      "maxGroupSize",
+      "difficulty",
+      "price",
+    ],
+  })
+);
+
 app.set("query parser", "extended");
 
-app.use(express.json());
+app.use(express.json({ limit: "10kb" }));
 app.use(express.static(`${__dirname}/public`));
 
 app.use((req, res, next) => {
