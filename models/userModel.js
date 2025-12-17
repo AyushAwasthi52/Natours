@@ -47,6 +47,12 @@ userSchema.pre("save", async function () {
   this.passwordConfirm = undefined;
 });
 
+userSchema.pre("save", function () {
+  if (!this.isModified("password") || this.isNew) return;
+
+  this.passwordChangedAt = Date.now() - 1000;
+});
+
 userSchema.methods.correctPassword = async function (
   givenPassword,
   userPassword
@@ -56,7 +62,7 @@ userSchema.methods.correctPassword = async function (
 
 userSchema.methods.changedPasswordAfter = function (jwtInitTimestamp) {
   if (this.passwordChangedAt) {
-    const time = parseInt(passwordChangedAt.getTime() / 1000, 10);
+    const time = parseInt(this.passwordChangedAt.getTime() / 1000, 10);
 
     return time > jwtInitTimestamp;
   }
