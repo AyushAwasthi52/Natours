@@ -2,26 +2,27 @@ const express = require("express");
 const morgan = require("morgan");
 const rateLimit = require("express-rate-limit");
 const helmet = require("helmet");
-const mongoSanitizer = require("express-mongo-sanitize");
-const xss = require("xss-clean");
+//const mongoSanitizer = require("express-mongo-sanitize");
+//const xss = require("xss-clean");
 const hpp = require("hpp");
 
 const AppError = require("./utils/appError");
 const GlobalErrorHandler = require("./controllers/errorController");
 const tourRouter = require("./routes/tourRoutes");
 const userRouter = require("./routes/userRoutes");
+const reviewRouter = require("./routes/reviewRoutes");
 
 const app = express();
 
 // 1) MIDDLEWARES
 app.use(helmet());
 
-app.use(mongoSanitizer());
-app.use(xss());
+//app.use(mongoSanitizer());
+//app.use(xss());
 
 const limit = rateLimit({
   max: 100,
-  window: 60 * 60 * 1000,
+  windowMs: 60 * 60 * 1000,
   message: "Too many requests try again in an hour",
 });
 app.use("/api", limit);
@@ -56,6 +57,7 @@ app.use((req, res, next) => {
 // 3) ROUTES
 app.use("/api/v1/tours", tourRouter);
 app.use("/api/v1/users", userRouter);
+app.use("/api/v1/reviews", reviewRouter);
 
 app.use("", (req, res, next) => {
   next(new AppError(`Cant find the path to ${req.originalUrl}`, 404));

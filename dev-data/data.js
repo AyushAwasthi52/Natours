@@ -4,7 +4,7 @@ const dotenv = require("dotenv");
 const Tour = require("./../models/tourModel");
 dotenv.config({ path: `${__dirname}/../config.env` });
 
-const Tours = fs.readFileSync(`${__dirname}/data/tours-simple.json`, "utf-8");
+const Tours = fs.readFileSync(`${__dirname}/data/tours.json`, "utf-8");
 
 mongoose
   .connect(process.env.DATABASE)

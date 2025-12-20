@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-const slugify = require('slugify');
+const slugify = require("slugify");
 
 const tourSchema = mongoose.Schema(
   {
@@ -41,10 +41,10 @@ const tourSchema = mongoose.Schema(
     priceDiscount: {
       type: Number,
       validate: {
-        validator: function(val) {
+        validator: function (val) {
           return val < this.price;
         },
-        message: 'Discount price ({VALUE}) should be less than regular price',
+        message: "Discount price ({VALUE}) should be less than regular price",
       },
     },
     summary: {
@@ -67,6 +67,35 @@ const tourSchema = mongoose.Schema(
       select: false,
     },
     startDates: [Date],
+    startLocation: {
+      type: {
+        type: String,
+        default: "Point",
+        enums: ["Point"],
+      },
+      coordinates: [Number],
+      address: String,
+      description: String,
+    },
+    locations: [
+      {
+        type: {
+          type: String,
+          default: "Point",
+          enums: ["Point"],
+        },
+        coordinates: [Number],
+        address: String,
+        description: String,
+        day: Number,
+      },
+    ],
+    guides: [
+      {
+        type: mongoose.Schema.ObjectId,
+        ref: "User",
+      },
+    ],
   },
   {
     toJSON: { virtuals: true },
@@ -78,10 +107,16 @@ tourSchema.virtual("durationWeeks").get(function () {
   return this.duration / 7;
 });
 
-tourSchema.pre('save', function(next) {
-  this.slug = slugify(this.name, { lower: true })
-  next();
-})
+tourSchema.pre("save", function () {
+  this.slug = slugify(this.name, { lower: true });
+});
+
+tourSchema.pre(/^find/, function () {
+  this.populate({
+    path: "guides",
+    select: "-__v -passwordChangedAt",
+  });
+});
 
 const tourModel = new mongoose.model("Tour", tourSchema);
 
