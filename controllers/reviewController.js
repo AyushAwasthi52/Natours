@@ -1,35 +1,27 @@
 const Review = require("./../models/reviewModel");
 const catchAsync = require("./../utils/catchAsync");
 const AppError = require("./../utils/appError");
+const {
+  deleteOne,
+  updateOne,
+  createOne,
+  getOne,
+  getAll,
+} = require("./handleFactory.js");
 
-exports.getAllReviews = catchAsync(async (req, res, next) => {
-  const reviews = await Review.find();
+exports.updateUserId = (req, res, next) => {
+  if (!req.body.tour) req.body.tour = req.params.tourId;
+  if (!req.body.user) req.body.user = req.user._id;
 
-  res.status(200).json({
-    status: "success",
-    results: reviews.length,
-    data: {
-      reviews,
-    },
-  });
-});
+  next();
+};
 
-exports.getReview = catchAsync(async (req, res, next) => {
-  const review = await Review.findById(req.params.id);
+exports.getAllReviews = getAll(Review);
 
-  if (!review) return next(new AppError("No rview by id", 404));
+exports.getReview = getOne(Review);
 
-  res.status(200).json({
-    status: "success",
-    data: review,
-  });
-});
+exports.createReview = createOne(Review);
 
-exports.createReview = catchAsync(async (req, res, next) => {
-  const newReview = await Review.create(req.body);
+exports.deleteReview = deleteOne(Review);
 
-  res.status(200).json({
-    status: "success",
-    data: newReview,
-  });
-});
+exports.updateReview = updateOne(Review);
