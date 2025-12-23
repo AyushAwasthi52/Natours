@@ -22,8 +22,8 @@ mongoose
 const importData = async () => {
   try {
     await Tour.create(JSON.parse(Tours));
-    await User.create(JSON.parse(Users), { validateBeforeSave: false });
-    await Review.create(JSON.parse(Reviews));
+    //await User.create(JSON.parse(Users), { validateBeforeSave: false });
+    //await Review.create(JSON.parse(Reviews));
     console.log("Data created Successfully");
   } catch (err) {
     console.log(err);
