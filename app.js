@@ -6,14 +6,23 @@ const helmet = require("helmet");
 //const mongoSanitizer = require("express-mongo-sanitize");
 //const xss = require("xss-clean");
 const hpp = require("hpp");
+const cookieParser = require("cookie-parser");
 
 const AppError = require("./utils/appError");
 const GlobalErrorHandler = require("./controllers/errorController");
 const tourRouter = require("./routes/tourRoutes");
 const userRouter = require("./routes/userRoutes");
 const reviewRouter = require("./routes/reviewRoutes");
+const viewRouter = require("./routes/viewRoutes");
+const cors = require("cors");
 
 const app = express();
+app.use(
+  cors({
+    origin: "http://127.0.0.1:3000",
+    credentials: true,
+  })
+);
 
 app.set("view engine", "pug");
 app.set("views", path.join(__dirname, "views"));
@@ -53,6 +62,8 @@ app.use(
 app.set("query parser", "extended");
 
 app.use(express.json({ limit: "10kb" }));
+app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
 app.use((req, res, next) => {
   req.requestTime = new Date().toISOString();
@@ -60,13 +71,18 @@ app.use((req, res, next) => {
 });
 
 // 3) ROUTES
-app.use("/", (req, res) => {
-  res.status(200).render("base");
-});
 
 app.use("/api/v1/tours", tourRouter);
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/reviews", reviewRouter);
+app.use("/", viewRouter);
+
+app.all(/.*/, (req, res) => {
+  res.status(404).render("error", {
+    title: "Page not found",
+    msg: "The page you are looking for does not exist.",
+  });
+});
 
 app.use("", (req, res, next) => {
   next(new AppError(`Cant find the path to ${req.originalUrl}`, 404));

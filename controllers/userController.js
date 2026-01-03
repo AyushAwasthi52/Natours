@@ -12,23 +12,32 @@ const filterObj = (object, ...fields) => {
 };
 
 exports.updateMe = catchAsync(async (req, res, next) => {
-  console.log("req.user:", req.user);
+  console.log("BODY:", req.body);
 
   if (req.body.password || req.body.passwordConfirm) {
-    return next(new AppError("This is not the path to update passwords", 400));
+    return next(new AppError("This route is not for password updates.", 400));
   }
 
   const filteredBody = filterObj(req.body, "name", "email");
-  const updateUser = await User.findByIdAndUpdate(req.user.id, filteredBody, {
-    new: true,
-    runValidators: true,
-  });
+  console.log(filteredBody, "Filtered");
+
+  if (!filteredBody.name || !filteredBody.email) {
+    return next(new AppError("Please provide both name and email", 400));
+  }
+
+  const user = await User.findById(req.user.id);
+  console.log(user, "User");
+
+  user.name = filteredBody.name;
+  user.email = filteredBody.email;
+
+  await user.save({ validateModifiedOnly: true });
+
+  console.log(user, "user");
 
   res.status(200).json({
     status: "success",
-    data: {
-      user: updateUser,
-    },
+    data: { user },
   });
 });
 
@@ -51,7 +60,7 @@ exports.createUser = (req, res) => {
 exports.getMe = (req, res, next) => {
   req.params.id = req.user.id;
   next();
-}
+};
 
 exports.getUser = getOne(User);
 exports.getAllUsers = getAll(User);

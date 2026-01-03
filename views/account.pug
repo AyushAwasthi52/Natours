@@ -1,0 +1,72 @@
+extends base
+
+mixin navItem(link, icon, text, active = false)
+  li(class=active ? 'side-nav--active' : '')
+    a(href=link)
+      svg
+        use(xlink:href=`/img/icons.svg#icon-${icon}`)
+      | #{text}
+
+
+block content
+  main.main
+    .user-view
+      nav.user-view__menu
+        ul.side-nav
+          +navItem('/me', 'settings', 'Settings', activePage === 'settings')
+          +navItem('/my-bookings', 'briefcase', 'My bookings', activePage === 'bookings')
+          +navItem('/my-reviews', 'star', 'My reviews', activePage === 'reviews')
+          +navItem('/billing', 'credit-card', 'Billing', activePage === 'billing')
+
+        if user.role === 'admin'
+          .admin-nav
+            h5.admin-nav__heading Admin
+            ul.side-nav
+              +navItem('/admin/tours', 'map', 'Manage tours')
+              +navItem('/admin/users', 'users', 'Manage users')
+              +navItem('/admin/reviews', 'star', 'Manage reviews')
+              +navItem('/admin/bookings', 'briefcase', 'Manage bookings')
+
+      .user-view__content
+        .user-view__form-container
+          h2.heading-secondary.ma-bt-md Your account settings
+
+          //- Image input kept but not wired to backend
+          form.form.form-user-data
+            .form__group
+              label.form__label(for='name') Name
+              input#name.form__input(type='text', value=user.name, required)
+
+            .form__group.ma-bt-md
+              label.form__label(for='email') Email address
+              input#email.form__input(type='email', value=user.email, required)
+
+            .form__group.form__photo-upload
+              img.form__user-photo(src=`/img/users/${user.photo}`, alt='User photo')
+              input.form__upload(type='file', id='photo', name='photo', accept='image/*', disabled)
+              label(for='photo') Choose new photo
+              p.form__hint(style="font-size:1.2rem;color:#999") Photo upload currently disabled
+
+            .form__group.right
+              button.btn.btn--small.btn--green(type='submit') Save settings
+
+        .line &nbsp;
+
+        .user-view__form-container
+          h2.heading-secondary.ma-bt-md Password change
+
+          form.form.form-user-password
+            .form__group
+              label.form__label(for='password-current') Current password
+              input#password-current.form__input(type='password', required minlength='8')
+
+            .form__group
+              label.form__label(for='password') New password
+              input#password.form__input(type='password', required minlength='8')
+
+            .form__group.ma-bt-lg
+              label.form__label(for='password-confirm') Confirm password
+              input#password-confirm.form__input(type='password', required minlength='8')
+
+            .form__group.right
+              button.btn.btn--small.btn--green(type='submit') Save password
